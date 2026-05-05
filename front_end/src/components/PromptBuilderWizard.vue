@@ -143,7 +143,10 @@
               <h3>Prompt généré</h3>
               <p class="small-text">Vous pouvez copier, personnaliser ou améliorer ce prompt.</p>
             </div>
-            <button type="button" class="secondary" @click="copyPrompt">Copier</button>
+            <button type="button" class="secondary copy-button" @click="copyPrompt">
+              <span class="copy-icon">📋</span>
+              <span>{{ copiedPrompt ? 'Copié' : 'Copier' }}</span>
+            </button>
           </div>
           <pre>{{ generatedPrompt }}</pre>
         </div>
@@ -167,7 +170,10 @@
           <div v-if="aiResponse" class="ai-response">
             <div class="ai-response-header">
               <h4>Réponse IA</h4>
-              <button type="button" class="secondary" @click="copyAIResponse" :disabled="loading">Copier</button>
+              <button type="button" class="secondary copy-button" @click="copyAIResponse" :disabled="loading">
+                <span class="copy-icon">📋</span>
+                <span>{{ copiedAIResponse ? 'Copié' : 'Copier' }}</span>
+              </button>
             </div>
             <pre>{{ aiResponse }}</pre>
           </div>
@@ -205,6 +211,8 @@ const ideaSuggestions = ref([])
 const newCustomOption = ref('')
 const showCustomOptionForm = ref(false)
 const promptGenerated = ref(false)
+const copiedPrompt = ref(false)
+const copiedAIResponse = ref(false)
 
 const progressPercentage = computed(() => {
   return ((stepIndex.value + 1) / steps.length) * 100
@@ -376,15 +384,29 @@ function clearAIResponse() {
 }
 
 function copyPrompt() {
-  navigator.clipboard.writeText(generatedPrompt.value).catch(() => {
-    error.value = 'Impossible de copier le prompt pour le moment.'
-  })
+  navigator.clipboard.writeText(generatedPrompt.value)
+    .then(() => {
+      copiedPrompt.value = true
+      setTimeout(() => {
+        copiedPrompt.value = false
+      }, 1500)
+    })
+    .catch(() => {
+      error.value = 'Impossible de copier le prompt pour le moment.'
+    })
 }
 
 function copyAIResponse() {
-  navigator.clipboard.writeText(aiResponse.value).catch(() => {
-    error.value = 'Impossible de copier la réponse IA pour le moment.'
-  })
+  navigator.clipboard.writeText(aiResponse.value)
+    .then(() => {
+      copiedAIResponse.value = true
+      setTimeout(() => {
+        copiedAIResponse.value = false
+      }, 1500)
+    })
+    .catch(() => {
+      error.value = 'Impossible de copier la réponse IA pour le moment.'
+    })
 }
 
 async function nextOrGenerate() {
@@ -666,6 +688,9 @@ button.tertiary {
   background: #ffffff;
   color: #1a202c;
   border: 1px solid var(--border);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 button.secondary:hover:not(:disabled),
@@ -673,6 +698,16 @@ button.tertiary:hover:not(:disabled) {
   border-color: var(--accent);
   background: var(--accent-light);
   transform: translateY(-1px);
+}
+
+.copy-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.copy-icon {
+  font-size: 1rem;
 }
 
 button:disabled {

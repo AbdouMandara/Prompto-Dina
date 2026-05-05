@@ -18,9 +18,10 @@ def build_prompt(data: PromptRequest) -> str:
 
     prompt_lines.extend(
         [
-            "A partir de l’idée suivante, crée un prompt optimisé pour un modèle d’IA :",
+            "A partir de l'idée suivante, génère un prompt optimisé et prêt à l'emploi pour utiliser avec un modèle d'IA.",
+            "Le prompt doit être directement utilisable, sans explication préalable.",
             data.idea.strip(),
-            "Fournis une réponse claire et structurée en respectant le format et le ton demandés.",
+            "Génère UNIQUEMENT le prompt, sans explication ni préambule.",
         ]
     )
 

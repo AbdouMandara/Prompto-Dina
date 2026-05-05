@@ -1,7 +1,7 @@
 <template>
   <section class="wizard">
     <div class="wizard-container">
-      <div class="wizard-card">
+      <div v-if="!promptGenerated" class="wizard-card">
         <div class="progress-bar-container">
           <div class="progress-bar-track">
             <div class="progress-bar-fill" :style="{ width: progressPercentage + '%' }"></div>
@@ -29,7 +29,7 @@
           </template>
 
           <template v-else-if="currentStep.type === 'select'">
-            <div class="options-grid">
+            <div class="options-grid" :class="{ 'two-columns': currentStep.key === 'tone' }">
               <button
                 v-for="option in currentStep.options"
                 :key="option"
@@ -39,6 +39,36 @@
               >
                 {{ option }}
               </button>
+            </div>
+            <div v-if="currentStepCustomOptions.length" class="custom-options">
+              <strong>Vos propositions :</strong>
+              <div class="options-grid">
+                <button
+                  v-for="option in currentStepCustomOptions"
+                  :key="option"
+                  type="button"
+                  :class="['pill', 'custom', { selected: formData[currentStep.key] === option }]"
+                  @click="selectOption(currentStep.key, option)"
+                >
+                  {{ option }}
+                </button>
+              </div>
+            </div>
+            <div v-if="stepIndex > 0" class="add-custom-option">
+              <button type="button" class="add-btn" @click="showCustomOptionForm = !showCustomOptionForm">
+                {{ showCustomOptionForm ? '✕ Annuler' : '+ Ajouter une proposition' }}
+              </button>
+              <div v-if="showCustomOptionForm" class="form-add-option">
+                <input
+                  v-model="newCustomOption"
+                  type="text"
+                  placeholder="Entrez votre proposition"
+                  @keyup.enter="addNewCustomOption"
+                />
+                <button type="button" class="secondary" @click="addNewCustomOption" :disabled="!newCustomOption.trim()">
+                  Ajouter
+                </button>
+              </div>
             </div>
           </template>
 
@@ -79,6 +109,20 @@
         </div>
 
         <div v-if="error" class="notification error" role="alert">{{ error }}</div>
+        <div v-if="stepIndex === 0 && ideaSuggestions.length" class="suggestions">
+          <strong>Suggestions basées sur votre idée :</strong>
+          <div class="suggestion-buttons">
+            <button
+              v-for="suggestion in ideaSuggestions"
+              :key="suggestion"
+              type="button"
+              class="suggestion-btn"
+              @click="applySuggestion(suggestion)"
+            >
+              {{ suggestion }}
+            </button>
+          </div>
+        </div>
         <div v-if="suggestions.length && !generatedPrompt" class="suggestions">
           <strong>Suggestions automatiques :</strong>
           <ul>
@@ -88,6 +132,11 @@
       </div>
 
       <section v-if="generatedPrompt" class="result-panel">
+        <div class="result-panel-header">
+          <button type="button" class="tertiary" @click="editPromptConfig" :disabled="loading">
+            ← Modifier la configuration
+          </button>
+        </div>
         <div class="result-card">
           <div class="result-card-header">
             <div>
@@ -110,16 +159,9 @@
         </div>
 
         <div class="result-card">
-          <div class="result-card-header">
-            <div>
-              <h3>Tester avec un provider IA</h3>
-              <p class="small-text">Sélectionnez le provider et lancez un test en direct.</p>
-            </div>
-            <button type="button" class="secondary" @click="clearAIResponse" :disabled="loading">Effacer</button>
-          </div>
-
+        
           <button type="button" class="primary" @click="testPrompt" :disabled="loading" style="width: 100%; max-width: 400px;">
-            {{ loading ? 'En cours...' : 'Tester avec HuggingFace' }}
+            {{ loading ? 'Prompt en cours de generation' : "Améliorer avec l'IA" }}
           </button>
 
           <div v-if="aiResponse" class="ai-response">
@@ -136,9 +178,11 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted } from 'vue'
+import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { useCustomOptionsStore } from '../stores/customOptions'
 
 const apiBase = import.meta.env.VITE_API_BASE_URL
+const customOptionsStore = useCustomOptionsStore()
 const formData = reactive({
   idea: '',
   objective: '',
@@ -157,6 +201,10 @@ const aiResponse = ref('')
 const error = ref('')
 const suggestions = ref([])
 const backendStatus = ref('Recherche du backend...')
+const ideaSuggestions = ref([])
+const newCustomOption = ref('')
+const showCustomOptionForm = ref(false)
+const promptGenerated = ref(false)
 
 const progressPercentage = computed(() => {
   return ((stepIndex.value + 1) / steps.length) * 100
@@ -215,7 +263,7 @@ const steps = [
     label: 'Ton',
     description: 'Définissez l’ambiance de la réponse.',
     type: 'select',
-    options: ['simple', 'professionnel', 'technique'],
+    options: ['simple', 'professionnel', 'technique', 'educatif'],
   },
   {
     key: 'length',
@@ -238,6 +286,44 @@ const steps = [
 ]
 
 const currentStep = computed(() => steps[stepIndex.value])
+
+// Générer les suggestions basées sur l'idée et l'objectif
+function generateIdeaSuggestions() {
+  const idea = formData.idea.trim().toLowerCase()
+  if (idea.length < 2) {
+    ideaSuggestions.value = []
+    return
+  }
+
+  const objectiveOptions = ['apprendre', 'créer', 'analyser', 'résoudre']
+  ideaSuggestions.value = objectiveOptions.map(obj => {
+    return `${obj} ${idea}`
+  })
+}
+
+// Surveiller les changements de l'idée
+watch(() => formData.idea, () => {
+  generateIdeaSuggestions()
+})
+
+// Charger les options personnalisées pour l'étape actuelle
+const currentStepCustomOptions = computed(() => {
+  return customOptionsStore.getCustomOptions(currentStep.value.key) || []
+})
+
+// Ajouter une option personnalisée
+function addNewCustomOption() {
+  const option = newCustomOption.value.trim()
+  if (option && !currentStepCustomOptions.value.includes(option)) {
+    customOptionsStore.addCustomOption(currentStep.value.key, option)
+    newCustomOption.value = ''
+  }
+}
+
+// Appliquer une suggestion à l'idée
+function applySuggestion(suggestion) {
+  formData.idea = suggestion
+}
 
 onMounted(() => {
   checkBackendConnection()
@@ -266,6 +352,7 @@ function jumpToStep(index) {
 function editPromptConfig() {
   generatedPrompt.value = ''
   aiResponse.value = ''
+  promptGenerated.value = false
   stepIndex.value = 0
 }
 
@@ -335,7 +422,7 @@ async function generatePrompt() {
     const data = await response.json()
     generatedPrompt.value = data.prompt
     suggestions.value = data.suggestions || []
-    stepIndex.value = steps.length - 1
+    promptGenerated.value = true
   } catch (err) {
     error.value = err.message || 'Échec de la communication avec le back-end.'
   } finally {
@@ -444,6 +531,12 @@ async function refinePrompt(action) {
   margin-bottom: 1.5rem;
 }
 
+.result-panel-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border);
+}
+
 .step-content {
   margin-bottom: 2rem;
 }
@@ -499,6 +592,10 @@ select:focus {
   gap: 0.8rem;
   grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   margin-top: 1rem;
+}
+
+.options-grid.two-columns {
+  grid-template-columns: repeat(2, 1fr);
 }
 
 .pill {
@@ -616,6 +713,113 @@ button:disabled {
   color: var(--text-muted);
   padding: 0.4rem 0;
   font-size: 0.95rem;
+}
+
+.suggestion-buttons {
+
+  flex-direction: column;
+  display: flex;
+  align-items: start;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+.suggestion-btn {
+  background: white;
+  color: black;
+  border: 1px solid var(--accent);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+}
+
+.suggestion-btn:hover {
+  background: var(--accent-light);
+  border-color: var(--accent);
+}
+
+.custom-options {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.custom-options strong {
+  display: block;
+  margin-bottom: 0.75rem;
+  color: #1a202c;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pill.custom {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.pill.custom:hover {
+  background: var(--accent);
+  color: white;
+}
+
+.add-custom-option {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+.add-btn {
+  background: #ffffff;
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+}
+
+.add-btn:hover {
+  background: var(--accent-light);
+  border-style: solid;
+}
+
+.form-add-option {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-add-option input {
+  flex: 1;
+  min-width: 200px;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: #f8fafb;
+  color: #1a202c;
+  font-family: 'Poppins', sans-serif;
+  font-size: 0.9rem;
+}
+
+.form-add-option input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(15, 139, 116, 0.1);
+}
+
+.form-add-option button {
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
 }
 
 .result-card {

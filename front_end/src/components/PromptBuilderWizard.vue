@@ -8,18 +8,16 @@
           </div>
           <div class="progress-labels">
             <div class="step-indicator">
-              <span class="step-counter">Étape {{ stepIndex + 1 }} / {{ steps.length }}</span>
               <span class="step-name">{{ currentStep.shortLabel }}</span>
-            </div>
-            <div class="backend-status">{{ backendStatus }}</div>
+            </div> 
+            <!-- <div class="backend-status">{{ currentStep.shortLabel }}</div> -->
           </div>
         </div>
         <div class="step-content">
-          <h2>{{ currentStep.title }}</h2>
           <p v-if="currentStep.description" class="subtitle">{{ currentStep.description }}</p>
 
           <template v-if="currentStep.type === 'textarea'">
-            <label :for="currentStep.key">{{ currentStep.label }}</label>
+            <label :for="currentStep.key"></label>
             <textarea
               :id="currentStep.key"
               v-model="formData[currentStep.key]"
@@ -45,7 +43,7 @@
           </template>
 
           <template v-else-if="currentStep.type === 'text'">
-            <label :for="currentStep.key">{{ currentStep.label }}</label>
+            <!-- <label :for="currentStep.key">{{ currentStep.label }}</label> -->
             <input
               :id="currentStep.key"
               v-model="formData[currentStep.key]"
@@ -523,13 +521,16 @@ select:focus {
 .pill:hover {
   border-color: var(--accent);
   background: var(--accent-light);
-  transform: translateY(-1px);
 }
 
 .pill.selected {
-  background: var(--accent);
-  color: white;
-  border-color: var(--accent);
+    padding: 0.35rem 0.5rem;
+  border-radius: 999px;
+  background: #e8f5f1;
+  color: #0f8b74;
+  font-size: 0.9rem;
+  font-weight: 500;
+  border: 1px solid rgba(15, 139, 116, 0.2);
 }
 
 .wizard-actions {
@@ -549,8 +550,8 @@ select:focus {
 button {
   appearance: none;
   border: 0;
-  border-radius: 12px;
-  padding: 0.95rem 1.5rem;
+  border-radius: 8px;
+  padding: 0.5rem 1.5rem;
   font-size: 0.95rem;
   font-weight: 600;
   cursor: pointer;
@@ -561,12 +562,6 @@ button {
 button.primary {
   background: linear-gradient(135deg, #0f8b74, #0d7a66);
   color: white;
-  box-shadow: 0 8px 20px rgba(15, 139, 116, 0.2);
-}
-
-button.primary:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 28px rgba(15, 139, 116, 0.3);
 }
 
 button.secondary,
@@ -726,8 +721,10 @@ button:disabled {
 }
 
 .step-indicator {
+  width: 100%;
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   gap: 0.25rem;
 }
 
@@ -740,12 +737,13 @@ button:disabled {
 }
 
 .step-name {
-  font-size: 1.1rem;
+  font-size: 1.5rem;
   color: #1a202c;
   font-weight: 700;
+  text-align: center;
 }
 
-.backend-status {
+/* .backend-status {
   padding: 0.5rem 1rem;
   border-radius: 999px;
   background: #e8f5f1;
@@ -753,7 +751,7 @@ button:disabled {
   font-size: 0.9rem;
   font-weight: 500;
   border: 1px solid rgba(15, 139, 116, 0.2);
-}
+} */
 
 @media (max-width: 768px) {
   .wizard {

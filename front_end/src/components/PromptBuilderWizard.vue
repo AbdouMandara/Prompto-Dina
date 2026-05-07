@@ -1278,7 +1278,6 @@ button:disabled {
 .social-link:hover {
   background: #0f8b74;
   color: white;
-  transform: translateY(-2px);
 }
 
 .social-link svg {

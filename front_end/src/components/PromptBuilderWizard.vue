@@ -130,17 +130,44 @@
         </div>
       </div>
 
-      <section v-if="generatedPrompt" class="result-panel">
+      <section v-if="generatedPrompt || aiResponse" class="result-panel">
         <div class="result-panel-header">
           <button type="button" class="tertiary" @click="editPromptConfig" :disabled="loading">
             ← Modifier la configuration
           </button>
+          <button type="button" class="primary" @click="testPrompt" :disabled="loading">
+            {{ loading ? 'Prompt en cours de génération' : aiResponse ? 'Régénérer à nouveau' : "Améliorer avec l'IA" }}
+          </button>
         </div>
-        <div class="result-card">
+        <div v-if="!generatedPrompt" class="result-card">
           <div class="result-card-header">
             <div>
-              <h3>Prompt basique généré </h3>
-              <p class="small-text">Vous pouvez copier, personnaliser ou améliorer ce prompt.</p>
+              <h3>Résumé de votre demande</h3>
+              <p class="small-text">Voici un aperçu de vos paramètres. Confirmez pour générer votre prompt.</p>
+            </div>
+          </div>
+          <div class="summary-content">
+            <div class="summary-item"><strong>Idée :</strong> {{ formData.idea }}</div>
+            <div class="summary-item"><strong>Objectif :</strong> {{ formData.objective }}</div>
+            <div class="summary-item"><strong>Rôle :</strong> {{ formData.role }}</div>
+            <div class="summary-item"><strong>Niveau :</strong> {{ formData.level }}</div>
+            <div class="summary-item"><strong>Format :</strong> {{ formData.responseFormat }}</div>
+            <div class="summary-item"><strong>Ton :</strong> {{ formData.tone }}</div>
+            <div class="summary-item"><strong>Longueur :</strong> {{ formData.length }}</div>
+            <div class="summary-item"><strong>Contraintes :</strong> {{ formData.constraints || 'Aucune' }}</div>
+          </div>
+          <div style="margin-top: 1.5rem; display: flex; gap: 0.75rem;">
+            <button type="button" class="primary" @click="generatePrompt" :disabled="loading">
+              {{ loading ? 'Génération...' : 'Générer le prompt' }}
+            </button>
+          </div>
+        </div>
+
+        <div v-if="generatedPrompt && !aiResponse" class="result-card">
+          <div class="result-card-header">
+            <div>
+              <h3>Résumé de votre demande</h3>
+              <p class="small-text">Voici un résumé de vos paramètres. Confirmez pour générer votre prompt.</p>
             </div>
             <button type="button" class="secondary copy-button" @click="copyPrompt">
               <span class="copy-icon">📋</span>
@@ -150,7 +177,7 @@
           <pre>{{ generatedPrompt }}</pre>
         </div>
 
-        <div class="result-card actions">
+        <div v-if="generatedPrompt && !aiResponse" class="result-card actions">
           <h3>Actions rapides</h3>
           <div class="action-buttons">
             <button type="button" @click="refinePrompt('simplifier')">Simplifier</button>
@@ -160,22 +187,31 @@
           </div>
         </div>
 
-        <div class="result-card">
-        
-          <button type="button" class="primary" @click="testPrompt" :disabled="loading" style="width: 100%; max-width: 400px;">
-            {{ loading ? 'Prompt en cours de generation' : "Améliorer avec l'IA" }}
-          </button>
-
-          <div v-if="aiResponse" class="ai-response">
-            <div class="ai-response-header">
-              <h4>Réponse IA</h4>
-              <button type="button" class="secondary copy-button" @click="copyAIResponse" :disabled="loading">
-                <span class="copy-icon">📋</span>
-                <span>{{ copiedAIResponse ? 'Copié' : 'Copier' }}</span>
-              </button>
+        <div v-if="aiResponse" class="result-card">
+          <div class="result-card-header">
+            <div>
+              <h3>Réponse IA</h3>
+              <p class="small-text">Voici la réponse générée par l'IA basée sur votre prompt.</p>
             </div>
-            <pre>{{ aiResponse }}</pre>
+            <button type="button" class="secondary copy-button" @click="copyAIResponse" :disabled="loading">
+              <span class="copy-icon">📋</span>
+              <span>{{ copiedAIResponse ? 'Copié' : 'Copier' }}</span>
+            </button>
           </div>
+          <pre>{{ aiResponse }}</pre>
+        </div>
+
+        <div v-if="error" class="result-card error-card">
+          <div class="result-card-header">
+            <div>
+              <h3>Erreur</h3>
+              <p class="small-text">Une erreur est survenue.</p>
+            </div>
+            <button type="button" class="secondary copy-button" @click="error = ''">
+              <span>✕ Fermer</span>
+            </button>
+          </div>
+          <div class="error-message">{{ error }}</div>
         </div>
       </section>
     </div>
@@ -556,6 +592,10 @@ async function refinePrompt(action) {
   margin-bottom: 1.5rem;
 }
 
+.result-panel {
+  position: relative;
+}
+
 .step-content,
 .step-content > * {
   width: 100%;
@@ -572,9 +612,14 @@ async function refinePrompt(action) {
 }
 
 .result-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
   margin-bottom: 1.5rem;
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
 }
 
 .step-content {
@@ -918,6 +963,32 @@ button:disabled {
   overflow-x: auto;
 }
 
+.summary-content {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  background: #f8fafb;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.summary-item {
+  padding: 0.75rem;
+  background: white;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  font-size: 0.9rem;
+  color: #1a202c;
+  line-height: 1.5;
+}
+
+.summary-item strong {
+  color: #0f8b74;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 100px;
+}
+
 .action-buttons {
   display: grid;
   gap: 0.8rem;
@@ -941,6 +1012,30 @@ button:disabled {
   gap: 1rem;
   flex-wrap: wrap;
   margin-bottom: 1rem;
+}
+
+.error-card {
+  position: absolute;
+  left: 1.5rem;
+  bottom: 1.5rem;
+  width: calc(100% - 3rem);
+  max-width: 420px;
+  border: 2px solid #dc2626;
+  background: #fef2f2;
+  z-index: 10;
+}
+
+.error-card h3 {
+  color: #dc2626;
+}
+
+.error-message {
+  padding: 1rem;
+  background: #fee2e2;
+  border-radius: 12px;
+  color: #991b1b;
+  font-weight: 500;
+  line-height: 1.6;
 }
 
 .progress-bar-container {

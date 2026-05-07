@@ -10,7 +10,6 @@
             <div class="step-indicator">
               <span class="step-name">{{ currentStep.shortLabel }}</span>
             </div> 
-            <!-- <div class="backend-status">{{ currentStep.shortLabel }}</div> -->
           </div>
         </div>
         <div class="step-content">
@@ -140,7 +139,7 @@
         <div class="result-card">
           <div class="result-card-header">
             <div>
-              <h3>Prompt généré</h3>
+              <h3>Prompt basique généré </h3>
               <p class="small-text">Vous pouvez copier, personnaliser ou améliorer ce prompt.</p>
             </div>
             <button type="button" class="secondary copy-button" @click="copyPrompt">
@@ -224,9 +223,9 @@ const steps = [
     title: 'Décrivez votre idée',
     shortLabel: 'Idée',
     label: 'Votre idée',
-    description: 'Entrez la base de votre demande, même si elle est encore floue.',
+    description: 'Entrez votre demande, même si elle est encore floue.',
     type: 'textarea',
-    placeholder: 'Exemple : créer un plan de contenu pour un blog de productivité',
+    placeholder: 'Exemple : Apprendre le Python',
   },
   {
     key: 'objective',
@@ -529,8 +528,8 @@ async function refinePrompt(action) {
 }
 
 .wizard {
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafb 0%, #eef6f9 100%);
+  min-height: max-content;
+  background: #ffffff;
   padding: 0 1rem 2rem;
   font-family: 'Poppins', sans-serif;
   display: flex;
@@ -538,19 +537,38 @@ async function refinePrompt(action) {
 }
 
 .wizard-container {
-  width: min(100%, 900px);
+  min-width : 600px;
+  max-width: 900px;
   margin: 0 auto;
   margin-top: 2rem;
 }
 
 .wizard-card,
 .result-panel {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   background: #ffffff;
-  border: 1px solid var(--border);
+  /* border: 1px solid #d1d5db; */
   border-radius: 20px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  /* box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08); */
   padding: 2.5rem;
   margin-bottom: 1.5rem;
+}
+
+.step-content,
+.step-content > * {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.step-content textarea,
+.step-content input,
+.step-content select {
+  width: 100%;
+  max-width: 100%;
+  display: block;
 }
 
 .result-panel-header {
@@ -591,7 +609,7 @@ select {
   width: 100%;
   padding: 0.95rem 1rem;
   border-radius: 12px;
-  border: 1px solid var(--border);
+  border: 1px solid #d1d5db;
   background: #ffffff;
   font-size: 0.95rem;
   color: #1a202c;
@@ -604,7 +622,7 @@ select {
 textarea:focus,
 input:focus,
 select:focus {
-  border-color: var(--accent);
+  /* border-color: var(--accent); */
   box-shadow: 0 0 0 3px rgba(15, 139, 116, 0.1);
   background: white;
 }
@@ -621,11 +639,11 @@ select:focus {
 }
 
 .pill {
-  border: 1px solid var(--border);
+  border: 1px solid #d1d5db;
   background: #ffffff;
   color: #1a202c;
-  padding: 0.9rem 1rem;
-  border-radius: 12px;
+  padding: 0.35rem 0.5rem;
+  border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
   text-align: center;
@@ -638,12 +656,12 @@ select:focus {
 }
 
 .pill:hover {
-  border-color: var(--accent);
-  background: var(--accent-light);
+  border-color: #0f8b74;
+  background: #e8f5f1;
 }
 
 .pill.selected {
-    padding: 0.35rem 0.5rem;
+  padding: 0.35rem 0.5rem;
   border-radius: 999px;
   background: #e8f5f1;
   color: #0f8b74;
@@ -687,7 +705,7 @@ button.secondary,
 button.tertiary {
   background: #ffffff;
   color: #1a202c;
-  border: 1px solid var(--border);
+  border: 1px solid #d1d5db;
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
@@ -695,9 +713,9 @@ button.tertiary {
 
 button.secondary:hover:not(:disabled),
 button.tertiary:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent-light);
-  transform: translateY(-1px);
+  border-color: #0f8b74;
+  background: #e8f5f1;
+  
 }
 
 .copy-button {
@@ -810,8 +828,8 @@ button:disabled {
 
 .add-btn {
   background: #ffffff;
-  color: var(--accent);
-  border: 1px dashed var(--accent);
+  color: #0f8b74;
+  border: 1px dashed #0f8b74;
   padding: 0.75rem 1rem;
   font-size: 0.9rem;
   border-radius: 8px;
@@ -926,11 +944,11 @@ button:disabled {
 }
 
 .progress-bar-container {
-  margin: -2.5rem -2.5rem 2rem -2.5rem;
+  margin: -2.5rem -2.5rem 0.5rem -2.5rem;
+  border-bottom: 0.65px solid #0000001f;
   background: white;
   border-bottom: 1px solid var(--border);
   padding: 1.5rem 2.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .progress-bar-track {
@@ -1002,8 +1020,9 @@ button:disabled {
   }
 
   .progress-bar-container {
-    margin: -1.5rem -1.5rem 1rem -1.5rem;
     padding: 1.25rem 1.5rem;
+    margin: -1.5rem -1.25rem 1rem -1.25rem;
+    border-bottom: 0.65px solid #0000001f;
   }
 
   .wizard-card,

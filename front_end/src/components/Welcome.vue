@@ -27,7 +27,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #f8fafb 0%, #eef6f9 100%);
+  /* background: linear-gradient(135deg, #f8fafb 0%, #eef6f9 100%); */
   font-family: 'Poppins', sans-serif;
 }
 

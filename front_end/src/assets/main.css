@@ -7,9 +7,9 @@ html {
 }
 
 body {
-  min-height: 100vh;
+  min-height: max-content;
   margin: 0;
-  background: linear-gradient(180deg, #f8fbff 0%, #eef5ff 100%);
+  background: white;
   color: var(--color-text);
   transition: color 0.4s, background-color 0.4s;
 }
@@ -39,11 +39,5 @@ a,
 @media (max-width: 640px) {
   #app {
     padding: 0;
-  }
-}
-
-@media (min-width: 1024px) {
-  #app {
-    padding: 3rem 2rem;
   }
 }

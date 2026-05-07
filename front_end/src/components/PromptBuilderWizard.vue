@@ -1,6 +1,11 @@
 <template>
-  <section class="wizard">
-    <div class="wizard-container">
+  <div class="app-wrapper">
+    <header class="app-header">
+      <h1 class="app-name">Prompto~Dina</h1>
+    </header>
+    
+    <section class="wizard">
+      <div class="wizard-container">
       <div v-if="!promptGenerated" class="wizard-card">
         <div class="progress-bar-container">
           <div class="progress-bar-track">
@@ -38,20 +43,15 @@
               >
                 {{ option }}
               </button>
-            </div>
-            <div v-if="currentStepCustomOptions.length" class="custom-options">
-              <strong>Vos propositions :</strong>
-              <div class="options-grid">
-                <button
-                  v-for="option in currentStepCustomOptions"
-                  :key="option"
-                  type="button"
-                  :class="['pill', 'custom', { selected: formData[currentStep.key] === option }]"
-                  @click="selectOption(currentStep.key, option)"
-                >
-                  {{ option }}
-                </button>
-              </div>
+              <button
+                v-for="option in currentStepCustomOptions"
+                :key="option"
+                type="button"
+                :class="['pill', { selected: formData[currentStep.key] === option }]"
+                @click="selectOption(currentStep.key, option)"
+              >
+                {{ option }}
+              </button>
             </div>
             <div v-if="stepIndex > 0" class="add-custom-option">
               <button type="button" class="add-btn" @click="showCustomOptionForm = !showCustomOptionForm">
@@ -108,20 +108,6 @@
         </div>
 
         <div v-if="error" class="notification error" role="alert">{{ error }}</div>
-        <div v-if="stepIndex === 0 && ideaSuggestions.length" class="suggestions">
-          <strong>Suggestions basées sur votre idée :</strong>
-          <div class="suggestion-buttons">
-            <button
-              v-for="suggestion in ideaSuggestions"
-              :key="suggestion"
-              type="button"
-              class="suggestion-btn"
-              @click="applySuggestion(suggestion)"
-            >
-              {{ suggestion }}
-            </button>
-          </div>
-        </div>
         <div v-if="suggestions.length && !generatedPrompt" class="suggestions">
           <strong>Suggestions automatiques :</strong>
           <ul>
@@ -211,7 +197,39 @@
         <!-- <div class="error-message">{{ error }}</div> -->
       </div>
     </div>
-  </section>
+    </section>
+
+    <footer class="app-footer">
+      <div class="footer-content">
+        <p>Fait par <strong>Abdou Mandara</strong></p>
+        <div class="social-links">
+          <a href="https://linkedin.com/in/abdou-mandara" target="_blank" rel="noopener" title="LinkedIn" class="social-link">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"></path>
+              <circle cx="4" cy="4" r="2"></circle>
+            </svg>
+          </a>
+          <a href="https://tiktok.com/@its_abdou_mandara" target="_blank" rel="noopener" title="TikTok" class="social-link">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"></path>
+            </svg>
+          </a>
+          <a href="https://github.com/AbdouMandara" target="_blank" rel="noopener" title="GitHub" class="social-link">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+            </svg>
+          </a>
+          <a href="https://instagram.com/abdou_mandara" target="_blank" rel="noopener" title="Instagram" class="social-link">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+              <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+              <circle cx="17.5" cy="6.5" r="1.5"></circle>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </footer>
+  </div>
 </template>
 
 <script setup>
@@ -238,7 +256,6 @@ const aiResponse = ref('')
 const error = ref('')
 const suggestions = ref([])
 const backendStatus = ref('Recherche du backend...')
-const ideaSuggestions = ref([])
 const newCustomOption = ref('')
 const showCustomOptionForm = ref(false)
 const promptGenerated = ref(false)
@@ -326,25 +343,6 @@ const steps = [
 
 const currentStep = computed(() => steps[stepIndex.value])
 
-// Générer les suggestions basées sur l'idée et l'objectif
-function generateIdeaSuggestions() {
-  const idea = formData.idea.trim().toLowerCase()
-  if (idea.length < 2) {
-    ideaSuggestions.value = []
-    return
-  }
-
-  const objectiveOptions = ['apprendre', 'créer', 'analyser', 'résoudre']
-  ideaSuggestions.value = objectiveOptions.map(obj => {
-    return `${obj} ${idea}`
-  })
-}
-
-// Surveiller les changements de l'idée
-watch(() => formData.idea, () => {
-  generateIdeaSuggestions()
-})
-
 // Charger les options personnalisées pour l'étape actuelle
 const currentStepCustomOptions = computed(() => {
   return customOptionsStore.getCustomOptions(currentStep.value.key) || []
@@ -357,11 +355,6 @@ function addNewCustomOption() {
     customOptionsStore.addCustomOption(currentStep.value.key, option)
     newCustomOption.value = ''
   }
-}
-
-// Appliquer une suggestion à l'idée
-function applySuggestion(suggestion) {
-  formData.idea = suggestion
 }
 
 onMounted(() => {
@@ -747,8 +740,6 @@ button.tertiary {
   background: #ffffff;
   color: #1a202c;
   border: 1px solid #d1d5db;
-  display: inline-flex;
-  align-items: center;
   gap: 0.5rem;
 }
 
@@ -922,7 +913,6 @@ button:disabled {
   border-radius: 16px;
   background: #ffffff;
   margin-bottom: 1.5rem;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 .result-card h3,
@@ -1094,16 +1084,6 @@ button:disabled {
   text-align: center;
 }
 
-/* .backend-status {
-  padding: 0.5rem 1rem;
-  border-radius: 999px;
-  background: #e8f5f1;
-  color: #0f8b74;
-  font-size: 0.9rem;
-  font-weight: 500;
-  border: 1px solid rgba(15, 139, 116, 0.2);
-} */
-
 .mobile-hidden {
   display: inline;
 }
@@ -1166,7 +1146,10 @@ button:disabled {
   }
 
   .result-card {
-    padding: 1rem;
+    padding: 0rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75em;
   }
 
   .progress-bar-container {
@@ -1212,6 +1195,118 @@ button:disabled {
 
   .mobile-text {
     display: inline;
+  }
+}
+
+.app-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.app-header {
+  backdrop-filter: blur(10px);
+  border-bottom : 1px solid #d1d5db;
+  padding: 1rem;
+  /* box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); */
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  justify-content: center;
+}
+
+.app-name {
+  width : max-content;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color : #0d7a66;
+  padding: 0.5rem 1rem;
+  background: #e8f5f1;
+  border-radius: 999px;
+}
+
+.app-footer {
+  border-top: 1px solid #d1d5db;
+  color: white;
+  padding: 2rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-content p {
+  margin: 0;
+  font-size: 0.95rem;
+  color: #5a6c7d;
+}
+
+.footer-content strong {
+  color: #0f8b74;
+  font-weight: 600;
+}
+
+.social-links {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.social-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(15, 139, 116, 0.1);
+  color: #0f8b74;
+  transition: all 0.2s ease;
+  text-decoration: none;
+}
+
+.social-link:hover {
+  background: #0f8b74;
+  color: white;
+  transform: translateY(-2px);
+}
+
+.social-link svg {
+  width: 20px;
+  height: 20px;
+}
+
+@media (max-width: 640px) {
+  .app-header {
+    padding: 1rem;
+  }
+
+  .app-name {
+    font-size: 1rem;
+  }
+
+  .app-footer {
+    padding: 1.5rem;
+  }
+
+  .footer-content {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .social-links {
+    justify-content: center;
+    width: 100%;
   }
 }
 </style>

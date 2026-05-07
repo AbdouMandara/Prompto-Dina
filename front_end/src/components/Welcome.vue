@@ -45,11 +45,11 @@
   padding: 0.5rem 1rem;
   background: #e8f5f1;
   color: #0f8b74;
+  border-radius: 999px;
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.15em;
   text-transform: uppercase;
-  border-radius: 999px;
   width: fit-content;
   margin: 0 auto;
 }

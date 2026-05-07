@@ -133,10 +133,10 @@
       <section v-if="generatedPrompt || aiResponse" class="result-panel">
         <div class="result-panel-header">
           <button type="button" class="tertiary" @click="editPromptConfig" :disabled="loading">
-            ← Modifier la configuration
+            <span class="mobile-hidden">← </span><span class="mobile-text">←</span><span class="mobile-hidden"> Modifier la configuration</span>
           </button>
           <button type="button" class="primary" @click="testPrompt" :disabled="loading">
-            {{ loading ? 'Prompt en cours de génération' : aiResponse ? 'Régénérer à nouveau' : "Améliorer avec l'IA" }}
+            {{ loading ? 'Prompt en cours de génération' : aiResponse ? 'Régénérer à nouveau' : "Avoir le prompt" }}
           </button>
         </div>
         <div v-if="!generatedPrompt" class="result-card">
@@ -167,12 +167,12 @@
           <div class="result-card-header">
             <div>
               <h3>Résumé de votre demande</h3>
-              <p class="small-text">Voici un résumé de vos paramètres. Confirmez pour générer votre prompt.</p>
+              <p class="small-text">Voici un résumé de vos paramètres.</p>
             </div>
-            <button type="button" class="secondary copy-button" @click="copyPrompt">
+            <!-- <button type="button" class="secondary copy-button" @click="copyPrompt">
               <span class="copy-icon">📋</span>
               <span>{{ copiedPrompt ? 'Copié' : 'Copier' }}</span>
-            </button>
+            </button> -->
           </div>
           <pre>{{ generatedPrompt }}</pre>
         </div>
@@ -191,7 +191,7 @@
           <div class="result-card-header">
             <div>
               <h3>Réponse IA</h3>
-              <p class="small-text">Voici la réponse générée par l'IA basée sur votre prompt.</p>
+              <p class="small-text">Voici le prompt générée par l'IA basée sur vos infos.</p>
             </div>
             <button type="button" class="secondary copy-button" @click="copyAIResponse" :disabled="loading">
               <span class="copy-icon">📋</span>
@@ -200,20 +200,16 @@
           </div>
           <pre>{{ aiResponse }}</pre>
         </div>
-
-        <div v-if="error" class="result-card error-card">
-          <div class="result-card-header">
-            <div>
-              <h3>Erreur</h3>
-              <p class="small-text">Une erreur est survenue.</p>
-            </div>
-            <button type="button" class="secondary copy-button" @click="error = ''">
-              <span>✕ Fermer</span>
-            </button>
-          </div>
-          <div class="error-message">{{ error }}</div>
-        </div>
       </section>
+      <div v-if="error" class="result-card error-card">
+        <div class="result-card-header">
+          <div>
+            <!-- <h3>Erreur</h3> -->
+            <p class="small-text-error">Une erreur est survenue.</p>
+          </div>
+        </div>
+        <!-- <div class="error-message">{{ error }}</div> -->
+      </div>
     </div>
   </section>
 </template>
@@ -573,8 +569,8 @@ async function refinePrompt(action) {
 }
 
 .wizard-container {
-  min-width : 600px;
-  max-width: 900px;
+  width: min(100%, 900px);
+  max-width: 100%;
   margin: 0 auto;
   margin-top: 2rem;
 }
@@ -941,12 +937,15 @@ button:disabled {
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-bottom: 1rem;
 }
 
 .result-card-header .small-text {
-  margin: 0.25rem 0 0;
+  margin: 0.25rem 0 0.35rem;
   color: #5a6c7d;
+  font-size: 0.9rem;
+}
+.small-text-error{
+  color: #fff;
   font-size: 0.9rem;
 }
 
@@ -1015,18 +1014,18 @@ button:disabled {
 }
 
 .error-card {
-  position: absolute;
-  left: 1.5rem;
-  bottom: 1.5rem;
-  width: calc(100% - 3rem);
-  max-width: 420px;
-  border: 2px solid #dc2626;
-  background: #fef2f2;
-  z-index: 10;
+  position: fixed;
+  right: 2rem;
+  bottom: 2rem;
+  width: max-content;
+  z-index: 9999;
+  padding: 0.5em 0.75em;
+  background: #dc2626;
+  
 }
 
 .error-card h3 {
-  color: #dc2626;
+  color: white;
 }
 
 .error-message {
@@ -1068,8 +1067,8 @@ button:disabled {
   align-items: center;
   flex-wrap: wrap;
   gap: 1rem;
-  max-width: 900px;
-  margin: 0 auto;
+  width: 100%;
+  margin: 0;
 }
 
 .step-indicator {
@@ -1104,6 +1103,14 @@ button:disabled {
   font-weight: 500;
   border: 1px solid rgba(15, 139, 116, 0.2);
 } */
+
+.mobile-hidden {
+  display: inline;
+}
+
+.mobile-text {
+  display: none;
+}
 
 @media (max-width: 768px) {
   .wizard {
@@ -1140,6 +1147,12 @@ button:disabled {
     align-items: stretch;
   }
 
+  .wizard-actions button,
+  .actions-right button,
+  .result-card-header button {
+    width: 100%;
+  }
+
   .progress-labels {
     flex-direction: column;
     align-items: flex-start;
@@ -1152,6 +1165,10 @@ button:disabled {
     padding: 1.25rem;
   }
 
+  .result-card {
+    padding: 1rem;
+  }
+
   .progress-bar-container {
     padding: 1rem;
   }
@@ -1161,8 +1178,40 @@ button:disabled {
     font-size: 0.9rem;
   }
 
+  .wizard-actions button,
+  .actions-right button,
+  .result-card-header button,
+  .form-add-option button {
+    width: 100%;
+  }
+
+  .form-add-option {
+    gap: 0.65rem;
+  }
+
+  .form-add-option input {
+    min-width: 0;
+    flex: 1 1 100%;
+  }
+
   .action-buttons {
     grid-template-columns: 1fr;
+  }
+
+  .error-card {
+    position: static;
+    width: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: 1rem;
+  }
+
+  .mobile-hidden {
+    display: none;
+  }
+
+  .mobile-text {
+    display: inline;
   }
 }
 </style>

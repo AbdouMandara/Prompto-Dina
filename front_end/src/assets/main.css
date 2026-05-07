@@ -17,7 +17,7 @@ body {
 #app {
   width: min(100%, 1280px);
   margin: 0 auto;
-  padding: 2.5rem 1.2rem;
+  /* padding: 2.5rem 1.2rem; */
   display: flex;
   justify-content: center;
 }
@@ -33,6 +33,12 @@ a,
 @media (hover: hover) {
   a:hover {
     background-color: hsla(160, 100%, 37%, 0.18);
+  }
+}
+
+@media (max-width: 640px) {
+  #app {
+    padding: 0;
   }
 }
 

@@ -40,3 +40,4 @@ __screenshots__/
 
 # important
 .env
+.env.production

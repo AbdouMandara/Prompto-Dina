@@ -108,12 +108,6 @@
         </div>
 
         <div v-if="error" class="notification error" role="alert">{{ error }}</div>
-        <div v-if="suggestions.length && !generatedPrompt" class="suggestions">
-          <strong>Suggestions automatiques :</strong>
-          <ul>
-            <li v-for="suggestion in suggestions" :key="suggestion">{{ suggestion }}</li>
-          </ul>
-        </div>
       </div>
 
       <section v-if="generatedPrompt || aiResponse" class="result-panel">
@@ -155,10 +149,6 @@
               <h3>Résumé de votre demande</h3>
               <p class="small-text">Voici un résumé de vos paramètres.</p>
             </div>
-            <!-- <button type="button" class="secondary copy-button" @click="copyPrompt">
-              <span class="copy-icon">📋</span>
-              <span>{{ copiedPrompt ? 'Copié' : 'Copier' }}</span>
-            </button> -->
           </div>
           <pre>{{ generatedPrompt }}</pre>
         </div>
@@ -233,7 +223,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, onMounted, watch } from 'vue'
+import { reactive, ref, computed, onMounted} from 'vue'
 import { useCustomOptionsStore } from '../stores/customOptions'
 
 const apiBase = import.meta.env.VITE_API_BASE_URL
@@ -254,7 +244,6 @@ const loading = ref(false)
 const generatedPrompt = ref('')
 const aiResponse = ref('')
 const error = ref('')
-const suggestions = ref([])
 const backendStatus = ref('Recherche du backend...')
 const newCustomOption = ref('')
 const showCustomOptionForm = ref(false)
@@ -357,10 +346,6 @@ function addNewCustomOption() {
   }
 }
 
-onMounted(() => {
-  checkBackendConnection()
-})
-
 function selectOption(key, option) {
   formData[key] = option
 }
@@ -407,19 +392,6 @@ function clearAIResponse() {
   aiResponse.value = ''
 }
 
-function copyPrompt() {
-  navigator.clipboard.writeText(generatedPrompt.value)
-    .then(() => {
-      copiedPrompt.value = true
-      setTimeout(() => {
-        copiedPrompt.value = false
-      }, 1500)
-    })
-    .catch(() => {
-      error.value = 'Impossible de copier le prompt pour le moment.'
-    })
-}
-
 function copyAIResponse() {
   navigator.clipboard.writeText(aiResponse.value)
     .then(() => {
@@ -429,7 +401,7 @@ function copyAIResponse() {
       }, 1500)
     })
     .catch(() => {
-      error.value = 'Impossible de copier la réponse IA pour le moment.'
+      error.value = 'Impossible de copier la réponse de l\'IA pour le moment.'
     })
 }
 
@@ -452,12 +424,13 @@ async function generatePrompt() {
   loading.value = true
   aiResponse.value = ''
   generatedPrompt.value = ''
-  suggestions.value = []
-
+  
   try {
     const response = await fetch(`${apiBase}/generate_prompt`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify(formData),
     })
 
@@ -467,7 +440,6 @@ async function generatePrompt() {
 
     const data = await response.json()
     generatedPrompt.value = data.prompt
-    suggestions.value = data.suggestions || []
     promptGenerated.value = true
   } catch (err) {
     error.value = err.message || 'Échec de la communication avec le back-end.'
@@ -489,7 +461,9 @@ async function testPrompt() {
   try {
     const response = await fetch(`${apiBase}/test_prompt`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({ prompt: generatedPrompt.value }),
     })
 
@@ -773,58 +747,6 @@ button:disabled {
   border-radius: 12px;
   color: #991b1b;
   font-weight: 600;
-}
-
-.suggestions {
-  margin-top: 1.5rem;
-  padding: 1.25rem;
-  background: var(--accent-light);
-  border-radius: 12px;
-  border: 1px solid rgba(15, 139, 116, 0.2);
-}
-
-.suggestions strong {
-  display: block;
-  margin-bottom: 0.75rem;
-  color: var(--accent);
-}
-
-.suggestions ul {
-  list-style: none;
-  padding: 0;
-}
-
-.suggestions li {
-  color: var(--text-muted);
-  padding: 0.4rem 0;
-  font-size: 0.95rem;
-}
-
-.suggestion-buttons {
-
-  flex-direction: column;
-  display: flex;
-  align-items: start;
-  gap: 0.5rem;
-  margin-top: 1rem;
-}
-
-.suggestion-btn {
-  background: white;
-  color: black;
-  border: 1px solid var(--accent);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.9rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-family: 'Poppins', sans-serif;
-}
-
-.suggestion-btn:hover {
-  background: var(--accent-light);
-  border-color: var(--accent);
 }
 
 .custom-options {

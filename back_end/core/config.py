@@ -1,20 +1,19 @@
-from typing import Optional
-
-try:
-    from pydantic_settings import BaseSettings
-except ImportError:
-    from pydantic import BaseSettings
+from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    openai_api_key: Optional[str] = None
-    hf_token: Optional[str] = None
+    hf_token: str | None = None
     default_provider: str = "huggingface"
     hf_router_url: str = "https://router.huggingface.co/v1"
+    cors_origins: list[str] = [
+        "http://localhost:5173",
+        "http://localhost:8000",
+    ]
 
     model_config = {
         "env_file": ".env",
         "env_file_encoding": "utf-8",
+        "extra": "ignore",
     }
 
 

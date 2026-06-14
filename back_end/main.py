@@ -1,66 +1,80 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.errors import RateLimitExceeded
+from slowapi.util import get_remote_address
+from starlette.middleware.base import BaseHTTPMiddleware
 
-from services.ai_providers import call_huggingface_router
-from services.prompt_service import build_prompt, refine_prompt_text, suggest_improvements
-from services.schemas import (
-    AIResponse,
-    PromptRequest,
-    PromptResponse,
-    RefinePromptRequest,
-    TestPromptRequest,
-)
+from core.config import settings
+from services.prompt_service import build_prompt, suggest_improvements
+from services.schemas import *
 
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s %(levelname)s %(message)s',
 )
-logger = logging.getLogger('prompto_dina')
 
 
+def rate_limit_handler(request: Request, exc: Exception) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Trop de requêtes. Veuillez réessayer dans une minute."},
+    )
+
+
+limiter = Limiter(key_func=get_remote_address, default_limits=["30/minute"])
 app = FastAPI()
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_handler)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.cors_origins,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        return response
+
+
+app.add_middleware(SecurityHeadersMiddleware)
+
+
 @app.post('/generate_prompt', response_model=PromptResponse)
-def generate_prompt(data: PromptRequest):
-    logger.info('generate_prompt request: %s', data.dict())
-    prompt = build_prompt(data)
-    suggestions = suggest_improvements(data)
-    return PromptResponse(prompt=prompt, suggestions=suggestions)
-
-
-@app.post('/test_prompt', response_model=AIResponse)
-def test_prompt(data: TestPromptRequest):
-    logger.info('test_prompt request: %s', data.dict())
+@limiter.limit("10/minute")
+def generate_prompt(request: Request, data: PromptRequest):
     try:
-        response = call_huggingface_router(data.prompt)
-    except Exception as exc:
-        logger.exception('HuggingFace inference failed')
-        raise
-    logger.info('test_prompt response length: %d', len(response) if response else 0)
-    return AIResponse(response=response)
-
-
-@app.post('/refine_prompt', response_model=PromptResponse)
-def refine_prompt(data: RefinePromptRequest):
-    logger.info('refine_prompt request: %s', data.dict())
-    refined = refine_prompt_text(data.prompt, data.action)
-    return PromptResponse(prompt=refined)
+        prompt = build_prompt(data)
+        suggestions = suggest_improvements(data)
+        return PromptResponse(prompt=prompt, suggestions=suggestions)
+    except Exception:
+        logging.exception("Erreur lors de la génération du prompt")
+        return JSONResponse(
+            status_code=500,
+            content={"detail": "Erreur interne du serveur."},
+        )
 
 
 @app.get('/ping')
-def ping():
+@limiter.limit("30/minute")
+def ping(request: Request):
     return {'status': 'ok', 'message': 'Backend disponible'}
 
 
 @app.get('/')
-def read_root():
-    return {'message': 'Prompt Builder API opérationnelle'}
+@limiter.limit("30/minute")
+def read_root(request: Request):
+    return {
+        'message': 'Prompto~Dina est pret pour travailler'
+    }

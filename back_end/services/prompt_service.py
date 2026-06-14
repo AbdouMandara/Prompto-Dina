@@ -39,15 +39,3 @@ def suggest_improvements(data: PromptRequest) -> List[str]:
         suggestions.append("Confirmez que les contraintes avancées sont correctement intégrées.")
 
     return suggestions
-
-
-def refine_prompt_text(prompt: str, action: str) -> str:
-    instructions = {
-        'simplifier': 'Reformule ce prompt pour qu’il soit plus court et compréhensible tout en conservant l’objectif.',
-        'detaille': 'Rends ce prompt plus détaillé, ajoute des précisions utiles et des attentes claires.',
-        'technique': 'Rends ce prompt plus technique et précis pour un usage professionnel.',
-        'professionnel': 'Adopte un ton plus professionnel et formel dans ce prompt.',
-    }
-
-    modifier = instructions.get(action, 'Améliore ce prompt pour le rendre plus efficace et actionnable.')
-    return f"{prompt}\n\n{modifier}"
